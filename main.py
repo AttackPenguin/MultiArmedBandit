@@ -81,16 +81,16 @@ class MultiArmedBandit(nn.Module):
                 # Each module takes the output of all prior modules,
                 # plus their calculated rewards, so we increase the expected
                 # input size as we add modules.
-                nn.Linear(i * (n + 1), 256),
+                nn.Linear(i * (n + 1), 4096),
                 nn.RReLU(),
                 nn.Dropout(),
-                nn.Linear(256, 256),
+                nn.Linear(4096, 4096),
                 nn.RReLU(),
                 nn.Dropout(),
-                nn.Linear(256, 256),
+                nn.Linear(4096, 4096),
                 nn.RReLU(),
                 nn.Dropout(),
-                nn.Linear(256, n),
+                nn.Linear(4096, n),
                 nn.RReLU(),
                 # A dropout layer here causes a problem in which the softmax
                 # layer would often output multiple identical values in early
@@ -231,9 +231,9 @@ def train(model: nn.Module,
           optimizer: torch.optim.Optimizer,
           n: int = 10,
           pulls: int = 100,
-          batch_size: int = 256,
+          batch_size: int = 16,
           num_data_loader_workers: int = 4,
-          training_rounds: int = 1000):
+          training_rounds: int = 100_000):
 
     # dataset = RewardsGeneratorDataset(size=training_rounds)
     # dataloader = DataLoader(dataset,
@@ -247,6 +247,7 @@ def train(model: nn.Module,
     #     for gen in reward_gens:
     #         pass
     model.train(True)
+    reward_totals = list()
     for i in range(1, training_rounds+1):
         reward_gens = [
             RewardGenerator() for i in range(batch_size)
@@ -278,9 +279,13 @@ def train(model: nn.Module,
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        for reward in rewards:
+            reward_totals.append(sum(reward))
         if i % 50 == 0:
             print(f"{i} iterations complete.")
-
+            print(f"\tMean total reward last {i*batch_size} iterations: "
+                  f"{float(np.mean(reward_totals)):.2f}")
+            reward_totals = list()
 
 # train method test code:
 loss_fn = nn.BCELoss()
