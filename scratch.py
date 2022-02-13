@@ -5,6 +5,4 @@ import torch
 from torch import nn
 
 
-x = torch.rand((2, 11))
-x = torch.reshape(x, [2, 1, 11])
-print(x.shape)
+data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
