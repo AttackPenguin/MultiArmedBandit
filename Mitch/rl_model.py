@@ -182,15 +182,19 @@ class MAB(gym.Env):
     def play_arm(self, i, n_pulls=1):
         return self.arm2pull[i].rvs(n_pulls)
 
+# Check environment for compliance with gym
 # env = MAB()
 # check_env(env, warn=True)
 
 ################ Using stable baselines #######################
+# Initialize and train the model
+TRAIN_LEN = 1000
 env = MAB()
 env = make_vec_env(lambda: env, n_envs=1)
-model = A2C("MlpPolicy", env, verbose=1).learn(1000)
+model = A2C("MlpPolicy", env, verbose=1).learn(TRAIN_LEN)
 env.render()
 
+# Check the final results of the model
 obs = env.reset()
 n_steps = 1000
 for step in range(n_steps):
@@ -205,22 +209,3 @@ for step in range(n_steps):
     else:
         obs, regret, done, info = env.step(action)
 env.render()
-
-# Hardcode agent to always pick arm x
-# env.reset()
-# PICK_ARM = 4
-# n_steps = 1000
-# for step in range(n_steps):
-#     print("step {}".format(step+1))
-#     obs, regret, done, info = env.step(PICK_ARM)
-#     print("obs=", obs, 'regret=', regret, 'done=', done)
-# env.render()
-
-# plt.plot(np.linspace(0,1,10), arm2pull[4].pdf(np.linspace(0,1,10)))
-# plt.show();
-
-
-# foo = [np.array([0.35549958]), np.array([0.67500909]), np.array([0.32873236]), np.array([0.54341426])]
-# plt.hist(np.concatenate(foo))
-# plt.show();
-# np.stack(foo)
