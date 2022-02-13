@@ -1,4 +1,3 @@
-from cProfile import label
 import random
 import gym
 import numpy as np
@@ -25,7 +24,7 @@ class MAB(gym.Env):
         # Initialize alpha and beta
         self.a = a_vals
         self.b = b_vals
-        assert len(self.a) == len(self.b), "The len of the parameter space for the distributions don't match."
+        assert len(self.a) == len(self.b), "The len of a_vals and b_vals must match."
         self.n_arms = len(self.a)
 
         # Initialize dictionary to store actions
@@ -51,12 +50,12 @@ class MAB(gym.Env):
         self.rewards = []
         self.list_regrets = []
         self.T = 0
-        return np.array([0]).astype(np.float32)
-        # arm = random.choice(range(self.n_arms))
-        # return self.play_arm(arm)
+        # return np.array([0]).astype(np.float32)
+        arm = random.choice(range(self.n_arms))
+        return self.play_arm(arm)
     
     def loss_func(self, payout, action):
-        """Custom loss function. Compare the payout with the mean of all the arms."""
+        """Compare the payout with the mean of all the arms."""
         for arm in self.arm2reward:
             if self.arm2reward[arm]:
                 r_hat = np.mean(self.arm2reward[arm])
@@ -113,7 +112,8 @@ class MAB(gym.Env):
         return reward
 
     def step(self, action):
-        """Each step select an arm to pull (action)."""
+        """Each step select an arm to pull, calculate the return value from 
+        the arm and feed it into the loss function to get the reward."""
         # Record the observation from the action
         self.list_actions.append(action)
         obs = np.array([action])
@@ -121,7 +121,7 @@ class MAB(gym.Env):
         self.arm2reward[action].append(payout)
         
         # Calculate reward based off of custom loss function
-        # reward = self.loss_func_mean(payout, memory=3)
+        # reward = self.loss_func_mean(payout)
         reward = self.loss_func(payout, action)
         self.rewards.append(payout)
 
@@ -137,6 +137,13 @@ class MAB(gym.Env):
         return obs, reward, done, info
     
     def render(self, mode='console'):
+        """Generate visualization of 
+        (top) the distribution of rewards from each
+        lever pull compared to the distribution of the arm with the highest 
+        expected value. 
+        
+        (bottom) The regret as time progresses.
+        """
         x = np.linspace(0,1,100)
 
         # Plot distribution of rewards received compared to best distribution
@@ -166,10 +173,6 @@ class MAB(gym.Env):
         """Initialize arms according to a beta distribution
         Expected value of beta distribution is a/(a+b)
         Variance is a*b / ((a+b)**2 * (a*b+1)) 
-        
-        Arguments
-        a_vals : list of values for alpha
-        b_vals : list of values for beta
         """
         for arm, (a,b) in enumerate(zip(self.a, self.b)):
             p = scipy.stats.beta(a, b)
@@ -180,6 +183,7 @@ class MAB(gym.Env):
         self.best_arm = [i for i in self.arm2trueExpectedReward.keys() if self.arm2trueExpectedReward[i] == self.r_star]
 
     def play_arm(self, i, n_pulls=1):
+        """Return (n_pulls) random samples from arm i."""
         return self.arm2pull[i].rvs(n_pulls)
 
 # Check environment for compliance with gym
@@ -194,12 +198,10 @@ env = make_vec_env(lambda: env, n_envs=1)
 model = A2C("MlpPolicy", env, verbose=1).learn(TRAIN_LEN)
 env.render()
 
-# Check the final results of the model
+# Run the final model on 1000 timesteps
 obs = env.reset()
 n_steps = 1000
 for step in range(n_steps):
-    # Good explanation why we set deterministic to False
-    # https://stackoverflow.com/questions/66455636/what-does-deterministic-true-in-stable-baselines3-library-means
     action, _ = model.predict(obs, deterministic=False)
     if step < 5 or step > n_steps-5:
         print("Step {}".format(step + 1))
@@ -209,3 +211,6 @@ for step in range(n_steps):
     else:
         obs, regret, done, info = env.step(action)
 env.render()
+
+# Good explanation why we set deterministic to False
+# https://stackoverflow.com/questions/66455636/what-does-deterministic-true-in-stable-baselines3-library-means
