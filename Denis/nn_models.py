@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import numpy as np
 import torch
 from torch import nn
@@ -9,40 +11,60 @@ class MABInceptionModel(nn.Module):
     def __init__(self,
                  n: int = 10,
                  pulls: int = 100,
-                 module_width: int = 256):
+                 module_width: int = 256,
+                 use_dropout: bool = False,
+                 dropout_ratio: float = 0.5):
         super(MABInceptionModel, self).__init__()
         # We will store a list of modules that will pull (pulls-1) levers. Our
         # first lever pull will be random, so there is no reason to
         # implement a module for it.
         self.n = n
+        self.pulls = pulls
+        self.module_width = module_width
+        self.use_dropout = use_dropout
+        self.dropout_ratio = dropout_ratio
         self.modules_list = nn.ModuleList()
         for i in range(1, pulls):
-            module = nn.Sequential(
-                # Each module takes the output of all prior modules,
-                # plus their calculated rewards, so we increase the expected
-                # input size as we add modules.
-                nn.Linear(i * (n + 1), module_width),
-                nn.RReLU(),
-                nn.Dropout(),
-                nn.Linear(module_width, module_width),
-                nn.RReLU(),
-                nn.Dropout(),
-                nn.Linear(module_width, module_width),
-                nn.RReLU(),
-                nn.Dropout(),
-                nn.Linear(module_width, n),
-                nn.RReLU(),
-                nn.Softmax(dim=2)
-            )
+            components = OrderedDict()
+
+            # Each module takes the output of all prior modules,
+            # plus their calculated rewards, so we increase the expected
+            # input size as we add modules.
+            components[f'mod{i}lin1'] = nn.Linear(i * (n + 1), module_width)
+            components[f'mod{i}rrelu1'] = nn.RReLU()
+            if use_dropout:
+                components[f'mod{i}dropout1'] = nn.Dropout(p=dropout_ratio)
+
+            components[f'mod{i}lin2'] = nn.Linear(module_width, module_width)
+            components[f'mod{i}rrelu2'] = nn.RReLU()
+            if use_dropout:
+                components[f'mod{i}dropout2'] = nn.Dropout(p=dropout_ratio)
+
+            components[f'mod{i}lin3'] = nn.Linear(module_width, module_width)
+            components[f'mod{i}rrelu3'] = nn.RReLU()
+            if use_dropout:
+                components[f'mod{i}dropout3'] = nn.Dropout(p=dropout_ratio)
+
+            # The final linear layer drops down to n output values,
+            # to be used to select a lever to pull.
+            components[f'mod{i}lin4'] = nn.Linear(module_width, n)
+            components[f'mod{i}rrelu4'] = nn.RReLU()
+            if use_dropout:
+                components[f'mod{i}dropout4'] = nn.Dropout(p=dropout_ratio)
+
+            nn.Softmax(dim=2)
+
+            module = nn.Sequential(components)
             self.modules_list.append(module)
 
     def forward(self,
                 reward_generators: list[RewardGenerator]):
         """
-        The forward method gets a list of methods that calculate rewards
-        based on which levers are pulled, rather than a tensor of input
-        values. Input values are random floats in the range [0, 1], resulting
-        in a random first lever pull.
+        The forward method gets a list of RewardGenerator objects, rather than
+        a tensor of input values. The reward generators calculate a reward
+        based on the lever pulled by each module in self.modules_list.
+        Input tensors are constructed from random floats in the range [0, 1],
+        resulting in a random first lever pull.
         :param reward_generators: A list of RewardGenerator methods.
         :return:
         """
@@ -53,17 +75,21 @@ class MABInceptionModel(nn.Module):
         levers = list()
 
         # We initialize an input tensor to random values in the range [0, 1]
+        # len(reward_generators) is our batch size.
         module_input = torch.rand(
-            (len(reward_generators), self.n), requires_grad=True
+            (len(reward_generators), self.n)
         )
 
         # We iterate through each of the input tensors, calculating which
         # lever is pulled and the resulting reward. We append these results
-        # to all_rewards and levers.
+        # to all_rewards and levers. This is our initialization step to
+        # create our input for our first module.
         for i, x in enumerate(module_input):
             max_indices = list((x == torch.max(x)).nonzero(as_tuple=True)[0])
+            # There is a very small chance of getting two identical values in
+            # our input vector, so we invoke np.random.choice to deal with
+            # this possibility.
             lever = np.random.choice(max_indices)
-            # lever = int((x == torch.max(x)).nonzero(as_tuple=True)[0])
             levers.append([lever])
             reward = reward_generators[i].get_reward(lever)
             rewards.append([reward])
@@ -74,6 +100,10 @@ class MABInceptionModel(nn.Module):
         module_input = module_input.reshape(
             [len(reward_generators), 1, self.n]
         )
+        # We can use our rewards list here. When we iterate through the
+        # modules below, we will need to locally track them in a
+        # local_rewards list because rewards will accumulate multiple columns
+        # of outputs.
         local_rewards = torch.Tensor(rewards).reshape(
             [len(reward_generators), 1, 1]
         )
@@ -97,26 +127,31 @@ class MABInceptionModel(nn.Module):
             # After the first loop, we will want to concatenate our output to
             # our previous module's input to generate our new input for the
             # next module.
-            if module_output is not None:
+            if module_output is not None:  # First pass only
                 module_input = torch.cat((module_input, module_output), dim=2)
             # Do a forward pass through the module.
             module_output = module(module_input)
-            # Add the lever pull output to each sub-tensor
+
+            # For each RewardGenerator in the batch, determine the lever
+            # pulled and the reward generated for pulling the lever.
             local_rewards = list()
-            local_module_outputs = list()
             for i, x in enumerate(module_output):
-                local_module_outputs.append(x)
                 max_indices = list(torch.ravel(
                     (x == torch.max(x)).nonzero(as_tuple=True)[1]
                 ))
+                # There is a very small chance of getting two identical values
+                # in our output vector, so we invoke np.random.choice to deal
+                # with this possibility.
                 lever = np.random.choice(max_indices)
                 levers[i].append(lever)
                 reward = reward_generators[i].get_reward(lever)
                 rewards[i].append(reward)
                 local_rewards.append([reward])
+
             # We append module_output to module_outputs BEFORE tacking the
-            # reward values on, since we won't be back-propagating through them.
-            if module_outputs is None:
+            # reward values on, since we won't be back-propagating through
+            # the rewards, just the module outputs.
+            if module_outputs is None:  # First pass only
                 module_outputs = module_output
             else:
                 module_outputs = torch.cat(
