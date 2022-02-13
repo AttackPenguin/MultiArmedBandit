@@ -26,7 +26,7 @@ class RewardGenerator:
         pass
 
 
-class RewardGenerator01(RewardGenerator):
+class RewardGeneratorTruncNorm(RewardGenerator):
     """
     Randomly generates a list of n values in the range [0, 1]. These values
     are used as the means of normal distributions with standard deviations of
