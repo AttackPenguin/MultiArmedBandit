@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
@@ -81,16 +82,16 @@ class MultiArmedBandit(nn.Module):
                 # Each module takes the output of all prior modules,
                 # plus their calculated rewards, so we increase the expected
                 # input size as we add modules.
-                nn.Linear(i * (n + 1), 4096),
+                nn.Linear(i * (n + 1), 256),
                 nn.RReLU(),
                 nn.Dropout(),
-                nn.Linear(4096, 4096),
+                nn.Linear(256, 256),
                 nn.RReLU(),
                 nn.Dropout(),
-                nn.Linear(4096, 4096),
+                nn.Linear(256, 256),
                 nn.RReLU(),
                 nn.Dropout(),
-                nn.Linear(4096, n),
+                nn.Linear(256, n),
                 nn.RReLU(),
                 # A dropout layer here causes a problem in which the softmax
                 # layer would often output multiple identical values in early
@@ -124,7 +125,9 @@ class MultiArmedBandit(nn.Module):
         # lever is pulled and the resulting reward. We append these results
         # to all_rewards and levers.
         for i, x in enumerate(module_input):
-            lever = int((x == torch.max(x)).nonzero(as_tuple=True)[0])
+            max_indices = list((x == torch.max(x)).nonzero(as_tuple=True)[0])
+            lever = np.random.choice(max_indices)
+            # lever = int((x == torch.max(x)).nonzero(as_tuple=True)[0])
             levers.append([lever])
             reward = reward_generators[i].get_reward(lever)
             rewards.append([reward])
@@ -231,9 +234,10 @@ def train(model: nn.Module,
           optimizer: torch.optim.Optimizer,
           n: int = 10,
           pulls: int = 100,
-          batch_size: int = 16,
+          batch_size: int = 256,
           num_data_loader_workers: int = 4,
-          training_rounds: int = 100_000):
+          training_rounds: int = 100_000,
+          report_modulus: int = 100):
 
     # dataset = RewardsGeneratorDataset(size=training_rounds)
     # dataloader = DataLoader(dataset,
@@ -281,22 +285,35 @@ def train(model: nn.Module,
         optimizer.step()
         for reward in rewards:
             reward_totals.append(sum(reward))
-        if i % 50 == 0:
+        if i % report_modulus == 0:
             print(f"{i} iterations complete.")
-            print(f"\tMean total reward last {i*batch_size} iterations: "
+            print(f"\tMean total reward last {report_modulus*batch_size} "
+                  f"generators pushed: "
                   f"{float(np.mean(reward_totals)):.2f}")
             reward_totals = list()
 
+
 # train method test code:
+dttm_start = pd.Timestamp.now()
+print(dttm_start)
+
 loss_fn = nn.BCELoss()
-optimizer = torch.optim.Adam(model.parameters())
+optimizer = torch.optim.Adam(
+    model.parameters()
+)
 model.to(device)
-train(model, loss_fn, optimizer)
+train(model, loss_fn, optimizer,
+      batch_size=64, training_rounds=1_000_000,
+      report_modulus=200)
+
+dttm_finish = pd.Timestamp.now()
+print(dttm_finish)
+print(dttm_finish-dttm_start)
 
 model.train(False)
 
 reward_totals = list()
-for _ in range(1000):
+for _ in range(1_000_000):
     gen = RewardGenerator()
     _, _, rewards = model([gen])
     reward_totals.append(sum(rewards[0]))
