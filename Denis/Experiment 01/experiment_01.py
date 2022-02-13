@@ -24,6 +24,5 @@ training_method_01(
     loss_fn,
     optimizer,
     RewardGeneratorTruncNorm,
-    save_dir='Run 01',
-    save_interval=5
+    save_dir='Run 01'
 )
