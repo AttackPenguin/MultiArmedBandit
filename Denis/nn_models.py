@@ -52,7 +52,7 @@ class MABInceptionModel(nn.Module):
             if use_dropout:
                 components[f'mod{i}dropout4'] = nn.Dropout(p=dropout_ratio)
 
-            nn.Softmax(dim=2)
+            components[f'mod{i}softmax'] = nn.Softmax(dim=2)
 
             module = nn.Sequential(components)
             self.modules_list.append(module)

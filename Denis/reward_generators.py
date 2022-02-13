@@ -68,7 +68,7 @@ class RewardGeneratorTruncNorm(RewardGenerator):
             loc = self.means[n],
             scale = self.std
         )
-        return return_val.rvs(1)
+        return float(return_val.rvs(1))
 
     def get_max_mean(self) -> int | float:
         """

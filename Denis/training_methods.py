@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import pickle
+from typing import Type
 
 import numpy as np
 import torch
@@ -13,7 +14,7 @@ from Denis.reward_generators import RewardGenerator
 def training_method_01(model: nn.Module,
                        loss_fn: callable,
                        optimizer: torch.optim.Optimizer,
-                       reward_generator: RewardGenerator,
+                       reward_generator: Type[RewardGenerator],
                        n: int = 10,
                        pulls: int = 100,
                        batch_size: int = 256,
@@ -106,7 +107,11 @@ def training_method_01(model: nn.Module,
         # Look back through the current window of training rounds to see if
         # we have a new high score. If so, store the current model's weights.
         window = mean_total_rewards[-1 * (i % save_interval):]
-        if window and max(window) < mean_total_reward:
+        if not window:  # Scenario where we've just entered a new window
+            best_weights = model.state_dict().copy()
+            best_weights_location = i
+            best_weights_tot_reward = mean_total_reward
+        elif max(window) < mean_total_reward:
             best_weights = model.state_dict().copy()
             best_weights_location = i
             best_weights_tot_reward = mean_total_reward
@@ -128,6 +133,9 @@ def training_method_01(model: nn.Module,
             best_weights_locations.append(best_weights_location)
             best_weights_location = None
             best_weights_tot_rewards.append(best_weights_tot_reward)
+            print(f"{i+1} Rounds of Training Completed. "
+                  f"Best mean total reward this window: "
+                  f"{best_weights_tot_reward:.2f}")
             best_weights_tot_reward = None
 
         with open(rewards_file_path, 'wb') as f:
