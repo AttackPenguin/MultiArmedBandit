@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class RewardGenerator:
+class RewardGenerator01:
     """
     Randomly generates a list of n values in the range [0, 1]. These values
     are used as the means of normal distributions with standard deviations of
