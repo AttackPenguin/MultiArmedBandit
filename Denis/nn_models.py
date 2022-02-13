@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from Denis.main import RewardGenerator
+from Denis.reward_generators import RewardGenerator
 
 
 class MABInceptionModel(nn.Module):

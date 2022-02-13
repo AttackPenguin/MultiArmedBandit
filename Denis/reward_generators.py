@@ -1,8 +1,32 @@
+from __future__ import annotations
+
+from abc import abstractmethod
+
 import numpy as np
 from scipy import stats
 
 
-class RewardGenerator01:
+class RewardGenerator:
+    @abstractmethod
+    def __init__(self,
+                 is_subclass = False):
+        pass
+
+    @abstractmethod
+    def get_reward(self,
+                   n: int) -> int | float:
+        pass
+
+    @abstractmethod
+    def get_max_mean(self) -> int | float:
+        pass
+
+    @abstractmethod
+    def get_best_lever(self) -> int:
+        pass
+
+
+class RewardGenerator01(RewardGenerator):
     """
     Randomly generates a list of n values in the range [0, 1]. These values
     are used as the means of normal distributions with standard deviations of
@@ -29,7 +53,7 @@ class RewardGenerator01:
             self.means.append(mean)
 
     def get_reward(self,
-                   n: int):
+                   n: int) -> int | float:
         """
         :param n: "Lever" to pull.
         :return: A value from a normal distribution with a mean of
@@ -47,26 +71,14 @@ class RewardGenerator01:
             scale = self.std
         )
         return return_val.rvs(1)
-        # if n < 0 or n > self.n:
-        #     raise ValueError(f"n is {n}, must be in range [0, {self.n}].")
-        # return_val = np.random.normal(
-        #     loc=self.means[n],
-        #     scale=self.std
-        # )
-        # # Check to ensure is in range [0, 1].
-        # if return_val < 0:
-        #     return 0.0
-        # if return_val > 1:
-        #     return 1.0
-        # return return_val
 
-    def get_max_mean(self):
+    def get_max_mean(self) -> int | float:
         """
         :return: The maximum mean in the distributions of return values.
         """
         return max(self.means)
 
-    def get_best_lever(self):
+    def get_best_lever(self) -> int:
         """
         :return: The index of the maximum distribution mean.
         """

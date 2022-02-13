@@ -2,35 +2,27 @@ import numpy as np
 import torch
 from torch import nn
 
-from Denis.main import RewardGenerator
+from Denis.reward_generators import RewardGenerator
 
 
-def train(model: nn.Module,
-          loss_fn: callable,
-          optimizer: torch.optim.Optimizer,
-          n: int = 10,
-          pulls: int = 100,
-          batch_size: int = 256,
-          num_data_loader_workers: int = 4,
-          training_rounds: int = 100_000,
-          report_modulus: int = 100):
+def training_method_01(model: nn.Module,
+                       loss_fn: callable,
+                       optimizer: torch.optim.Optimizer,
+                       reward_generator: RewardGenerator,
+                       n: int = 10,
+                       pulls: int = 100,
+                       batch_size: int = 256,
+                       training_rounds: int = 100_000,
+                       report_modulus: int = 100,
+                       save_dir: str = None,
+                       look_back_dist: int = 50):
 
-    # dataset = RewardsGeneratorDataset(size=training_rounds)
-    # dataloader = DataLoader(dataset,
-    #                         batch_size=batch_size,
-    #                         num_workers=num_data_loader_workers)
-    #
-    # for i, reward_gens in enumerate(dataloader):
-    #     module_outputs, levers, rewards = model(reward_gens)
-    #     # Build tensor of optimal choices
-    #     optimal_outputs = None
-    #     for gen in reward_gens:
-    #         pass
+    # Make sure our parameters are not frozen.
     model.train(True)
-    reward_totals = list()
     for i in range(1, training_rounds+1):
+        # Create a batch of reward_generators
         reward_gens = [
-            RewardGenerator() for i in range(batch_size)
+            reward_generator() for i in range(batch_size)
         ]
 
         optimal_lever = reward_gens[0].get_best_lever()
