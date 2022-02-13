@@ -49,7 +49,7 @@ class RewardGeneratorTruncNorm(RewardGenerator):
         # Means are stored in a list and accessed via their index.
         self.means = list()
         for _ in range(n):
-            mean = np.random.rand()
+            mean = float(np.random.rand())
             self.means.append(mean)
 
     def get_reward(self,
