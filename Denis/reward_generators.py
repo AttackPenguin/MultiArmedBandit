@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import stats
 
 
 class RewardGenerator01:
@@ -35,18 +36,29 @@ class RewardGenerator01:
         self.means[n] and a std deviation of self.std. Truncated to be in the
         range [0, 1].
         """
-        if n < 0 or n > self.n:
-            raise ValueError(f"n is {n}, must be in range [0, {self.n}].")
-        return_val = np.random.normal(
-            loc=self.means[n],
-            scale=self.std
+        if n < 0 or n >= self.n:
+            raise ValueError(f"n is {n}, must be in range [0, {self.n-1}].")
+        # Use a bounded normal distribution
+        lower, upper = 0, 1
+        return_val = stats.truncnorm(
+            (lower - self.means[n]) / self.std,
+            (upper - self.means[n]) / self.std,
+            loc = self.means[n],
+            scale = self.std
         )
-        # Check to ensure is in range [0, 1].
-        if return_val < 0:
-            return 0.0
-        if return_val > 1:
-            return 1.0
-        return return_val
+        return return_val.rvs(1)
+        # if n < 0 or n > self.n:
+        #     raise ValueError(f"n is {n}, must be in range [0, {self.n}].")
+        # return_val = np.random.normal(
+        #     loc=self.means[n],
+        #     scale=self.std
+        # )
+        # # Check to ensure is in range [0, 1].
+        # if return_val < 0:
+        #     return 0.0
+        # if return_val > 1:
+        #     return 1.0
+        # return return_val
 
     def get_max_mean(self):
         """
