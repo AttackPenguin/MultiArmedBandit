@@ -25,6 +25,6 @@ training_method_01(
     optimizer,
     RewardGeneratorTruncNorm,
     batch_size=32,
-    save_dir='Run 02',
+    save_dir='batch_size_32_lr_0.1',
     save_interval=50
 )
