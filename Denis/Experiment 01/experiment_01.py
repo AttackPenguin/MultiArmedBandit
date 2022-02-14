@@ -25,6 +25,7 @@ training_method_01(
     optimizer,
     RewardGeneratorTruncNorm,
     batch_size=32,
-    save_dir='batch_size_32_lr_0.1',
-    save_interval=50
+    save_dir=f"{pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}",
+    validate_interval=5,
+    save_interval=100
 )

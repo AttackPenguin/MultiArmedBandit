@@ -5,6 +5,7 @@ import pickle
 from typing import Type
 
 import numpy as np
+import pandas as pd
 import torch
 from torch import nn
 
@@ -21,11 +22,38 @@ def training_method_01(model: nn.Module,
                        validation_size: int = 1000,
                        training_rounds: int = None,
                        save_dir: str = None,
+                       validate_interval: int = 5,
                        save_interval: int = 100):
+
+    training_summary = (
+        f"{pd.Timestamp.now()}\n\n"
+        f"Loss Function: {loss_fn.__name__}\n"
+        f"Optimizer: {optimizer.__name__}\n"
+        f"Number of Levers: {n}\n"
+        f"Number of Lever Pulls: {pulls}\n"
+        f"Batch Size: {batch_size}\n"
+        f"Validation Size: {validation_size}\n"
+        f"Training Rounds: {training_rounds}\n"
+        f"Validation Interval: {validate_interval}\n"
+        f"Save Interval: {save_interval}\n\n"
+        f"Model Structure: \n\n"
+        f"{model}"
+    )
+    summary_file_path = os.path.join(
+        save_dir,
+        "Training Configuration.txt"
+    )
+    with open(summary_file_path, 'w') as f:
+        f.write(training_summary)
+
+    if save_interval % validate_interval != 0:
+        raise ValueError(
+            "validate_interval must evenly divide save_interval."
+        )
 
     if os.path.exists(save_dir):
         raise ValueError(
-            "Specified save directory alread exists. Exiting to avoid "
+            "Specified save directory already exists. Exiting to avoid "
             "overwriting existing data."
         )
     else:
@@ -113,54 +141,61 @@ def training_method_01(model: nn.Module,
         loss.backward()
         optimizer.step()
 
-        # Deactivate training mode.
-        model.train(False)
+        if (i+1 % validate_interval == 0 or i == training_rounds - 1) \
+                and i != 0:
 
-        # Get validation rewards
-        _, _, rewards = model(validation_gens)
-        reward_totals = [
-            sum(reward) for reward in rewards
-        ]
-        mean_total_reward = float(np.mean(reward_totals))
+            # Deactivate training mode.
+            model.train(False)
 
-        # Look back through the current window of training rounds to see if
-        # we have a new high score. If so, store the current model's weights.
-        window = mean_total_rewards[-1 * (i % save_interval):]
-        if not window:  # Scenario where we've just entered a new window
-            best_weights = model.state_dict().copy()
-            best_weights_location = i
-            best_weights_tot_reward = mean_total_reward
-        elif max(window) < mean_total_reward:
-            best_weights = model.state_dict().copy()
-            best_weights_location = i
-            best_weights_tot_reward = mean_total_reward
-        mean_total_rewards.append(mean_total_reward)
+            # Get validation rewards
+            _, _, rewards = model(validation_gens)
+            reward_totals = [
+                sum(reward) for reward in rewards
+            ]
+            mean_total_reward = float(np.mean(reward_totals))
 
-        # If we've reached the end of a window of training rounds,
-        # or if we've completed our final iteration, save the best weights in
-        # the window.
-        if (i % save_interval == 0 or i == training_rounds - 1) and i != 0:
-            file_path = os.path.join(
-                save_dir,
-                f"model_weights_round_"
-                f"{best_weights_location}_"
-                f"mtr_"
-                f"{best_weights_tot_reward:.2f}.pth"
-            )
-            torch.save(best_weights, file_path)
-            best_weights = None
-            best_weights_locations.append(best_weights_location)
-            best_weights_location = None
-            best_weights_tot_rewards.append(best_weights_tot_reward)
-            print(f"{i} Rounds of Training Completed. "
-                  f"Best mean total reward this window: "
-                  f"{best_weights_tot_reward:.2f}")
-            best_weights_tot_reward = None
+            # Look back through the current window of training rounds to see if
+            # we have a new high score. If so, store the current model's
+            # weights.
+            window = mean_total_rewards[
+                     -1 * (i % (save_interval // validate_interval)):
+                ]
+            if not window:  # Scenario where we've just entered a new window
+                best_weights = model.state_dict().copy()
+                best_weights_location = i
+                best_weights_tot_reward = mean_total_reward
+            elif max(window) < mean_total_reward:
+                best_weights = model.state_dict().copy()
+                best_weights_location = i
+                best_weights_tot_reward = mean_total_reward
+            mean_total_rewards.append(mean_total_reward)
 
-        with open(rewards_file_path, 'wb') as f:
-            pickle.dump(mean_total_rewards, f)
-        with open(best_weights_locs_file_path, 'wb') as f:
-            pickle.dump(best_weights_locations, f)
-        with open(best_weights_tot_rew_file_path, 'wb') as f:
-            pickle.dump(best_weights_tot_rewards, f)
+            # If we've reached the end of a window of training rounds,
+            # or if we've completed our final iteration, save the best weights
+            # in the window.
+            if (i+1 % save_interval == 0 or i == training_rounds - 1) \
+                    and i != 0:
+                file_path = os.path.join(
+                    save_dir,
+                    f"model_weights_round_"
+                    f"{best_weights_location}_"
+                    f"mtr_"
+                    f"{best_weights_tot_reward:.2f}.pth"
+                )
+                torch.save(best_weights, file_path)
+                best_weights = None
+                best_weights_locations.append(best_weights_location)
+                best_weights_location = None
+                best_weights_tot_rewards.append(best_weights_tot_reward)
+                print(f"{i} Rounds of Training Completed. "
+                      f"Best mean total reward this window: "
+                      f"{best_weights_tot_reward:.2f}")
+                best_weights_tot_reward = None
+
+            with open(rewards_file_path, 'wb') as f:
+                pickle.dump(mean_total_rewards, f)
+            with open(best_weights_locs_file_path, 'wb') as f:
+                pickle.dump(best_weights_locations, f)
+            with open(best_weights_tot_rew_file_path, 'wb') as f:
+                pickle.dump(best_weights_tot_rewards, f)
 
