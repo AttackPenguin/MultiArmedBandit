@@ -17,12 +17,13 @@ print(f"Started at: {dttm_start}")
 loss_fn = nn.BCELoss()
 optimizer = torch.optim.Adam(
     model.parameters(),
-    lr=0.01
+    lr=0.1
 )
 training_method_01(
     model,
     loss_fn,
     optimizer,
     RewardGeneratorTruncNorm,
+    batch_size=32,
     save_dir='Run 01'
 )

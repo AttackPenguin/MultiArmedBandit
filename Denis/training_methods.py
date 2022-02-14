@@ -133,7 +133,7 @@ def training_method_01(model: nn.Module,
             best_weights_locations.append(best_weights_location)
             best_weights_location = None
             best_weights_tot_rewards.append(best_weights_tot_reward)
-            print(f"{i+1} Rounds of Training Completed. "
+            print(f"{i} Rounds of Training Completed. "
                   f"Best mean total reward this window: "
                   f"{best_weights_tot_reward:.2f}")
             best_weights_tot_reward = None
