@@ -77,7 +77,7 @@ class MABInceptionModel(nn.Module):
         # We initialize an input tensor to random values in the range [0, 1]
         # len(reward_generators) is our batch size.
         module_input = torch.rand(
-            (len(reward_generators), self.n)
+            (len(reward_generators), self.n), requires_grad=True
         )
 
         # We iterate through each of the input tensors, calculating which

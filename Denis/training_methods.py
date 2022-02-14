@@ -18,11 +18,10 @@ def training_method_01(model: nn.Module,
                        n: int = 10,
                        pulls: int = 100,
                        batch_size: int = 256,
+                       validation_size: int = 1000,
                        training_rounds: int = None,
                        save_dir: str = None,
                        save_interval: int = 100):
-    # Make sure our parameters are not frozen.
-    model.train(True)
 
     if os.path.exists(save_dir):
         raise ValueError(
@@ -42,6 +41,14 @@ def training_method_01(model: nn.Module,
         save_dir,
         "mean_total_rewards.pickle"
     )
+    best_weights_locs_file_path = os.path.join(
+        save_dir,
+        "best_weights_locations.pickle"
+    )
+    best_weights_tot_rew_file_path = os.path.join(
+        save_dir,
+        "best_weights_tot_rewards.pickle"
+    )
     mean_total_rewards = list()
     best_weights = None
     best_weights_location = None
@@ -49,7 +56,15 @@ def training_method_01(model: nn.Module,
     best_weights_tot_reward = None
     best_weights_tot_rewards = list()
 
+    # We will
+    validation_gens = [
+        reward_generator() for i in range(validation_size)
+    ]
+
     for i in range(0, training_rounds):
+        # Set to training mode.
+        model.train(True)
+
         # Create a batch of reward_generators
         reward_gens = [
             reward_generator() for i in range(batch_size)
@@ -87,9 +102,9 @@ def training_method_01(model: nn.Module,
                 (optimal_outputs, optimal_output), dim=0
             )
 
-        # Do a forward pass. We don't care about the lever pulls data during
-        # training.
-        module_outputs, _, rewards = model(reward_gens)
+        # Do a forward pass. We don't care about the lever pulls or rewards
+        # when we're optimizing.
+        module_outputs, _, _ = model(reward_gens)
         # Loss is the calculated by comparing the optimal pulls to the actual
         # pulls tensors.
         loss = loss_fn(module_outputs, optimal_outputs)
@@ -98,7 +113,11 @@ def training_method_01(model: nn.Module,
         loss.backward()
         optimizer.step()
 
-        # Get the mean total reward for this training round
+        # Deactivate training mode.
+        model.train(False)
+
+        # Get validation rewards
+        _, _, rewards = model(validation_gens)
         reward_totals = [
             sum(reward) for reward in rewards
         ]
@@ -126,7 +145,7 @@ def training_method_01(model: nn.Module,
                 f"model_weights_round_"
                 f"{best_weights_location}_"
                 f"mtr_"
-                f"{best_weights_tot_reward}.pth"
+                f"{best_weights_tot_reward:.2f}.pth"
             )
             torch.save(best_weights, file_path)
             best_weights = None
@@ -140,3 +159,8 @@ def training_method_01(model: nn.Module,
 
         with open(rewards_file_path, 'wb') as f:
             pickle.dump(mean_total_rewards, f)
+        with open(best_weights_locs_file_path, 'wb') as f:
+            pickle.dump(best_weights_locations, f)
+        with open(best_weights_tot_rew_file_path, 'wb') as f:
+            pickle.dump(best_weights_tot_rewards, f)
+
