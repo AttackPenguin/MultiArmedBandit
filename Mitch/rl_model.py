@@ -5,10 +5,9 @@ import scipy.stats
 import matplotlib.pyplot as plt
 from gym import spaces
 from stable_baselines3.common.env_checker import check_env
-from stable_baselines3 import DQN, A2C
+from stable_baselines3 import PPO, A2C
 from stable_baselines3.common.env_util import make_vec_env
 from loss_functions import loss_func
-
 
 class MAB(gym.Env):
     metadata = {'render.modes': ['console']}
@@ -127,6 +126,16 @@ class MAB(gym.Env):
         """Return random samples from playing an arm."""
         return self.arm2pull[arm].rvs(n_pulls)
 
+def train_model(training_len = 1000, g=0.95, lr=0.0007, steps=1):
+    """Train the model."""
+    env = MAB()
+    env = make_vec_env(lambda: env, n_envs=1)
+    model = A2C("MlpPolicy",
+                env, verbose=1, 
+                gamma=g,
+                learning_rate=lr,
+                n_steps=steps).learn(training_len)
+    env.render()
 
 if __name__ == '__main__':
     # Check environment for compliance with gym
@@ -134,11 +143,8 @@ if __name__ == '__main__':
     check_env(env, warn=True)
 
     # Initialize and train the model
-    TRAIN_LEN = 1000
-    env = MAB()
-    env = make_vec_env(lambda: env, n_envs=1)
-    model = A2C("MlpPolicy", env, verbose=1).learn(TRAIN_LEN)
-    env.render()
+    train_model(g=0.9, lr=0.001)
+    
 
     # Run the trained model on 1000 timesteps
     # obs = env.reset()

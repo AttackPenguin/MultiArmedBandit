@@ -21,7 +21,7 @@ def loss_func(payout, action, arm2reward, arm2r_hat):
         arm2r_hat[arm] = r_hat
     max_r_hat = max(arm2r_hat.values())
     std = np.std(arm2reward[action])
-    if payout - max_r_hat != 0:
+    if payout - max_r_hat + std != 0:
         reward = float((payout - max_r_hat + std)**-1)
     else:
         reward = 1000
