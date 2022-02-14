@@ -8,8 +8,7 @@ from scipy import stats
 
 class RewardGenerator:
     @abstractmethod
-    def __init__(self,
-                 is_subclass = False):
+    def __init__(self):
         pass
 
     @abstractmethod
@@ -37,13 +36,12 @@ class RewardGeneratorTruncNorm(RewardGenerator):
     than this range are generated, 1 is returned, and when values lower than
     this range are generated, 0 is returned.
     """
-    def __init__(self,
-                 n: int = 10,
-                 std: float = 0.1):
+    def __init__(self, n: int = 10, std: float = 0.1):
         """
         :param n: The number of distributions to create.
         :param std: The standard deviation of the distributions.
         """
+        super().__init__()
         self.n = n
         self.std = std
         # Means are stored in a list and accessed via their index.
@@ -70,7 +68,7 @@ class RewardGeneratorTruncNorm(RewardGenerator):
             loc = self.means[n],
             scale = self.std
         )
-        return return_val.rvs(1)
+        return float(return_val.rvs(1))
 
     def get_max_mean(self) -> int | float:
         """
