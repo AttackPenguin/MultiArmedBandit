@@ -89,7 +89,7 @@ def training_method_01(model: nn.Module,
 
     # We will
     validation_gens = [
-        reward_generator() for i in range(validation_size)
+        reward_generator() for _ in range(validation_size)
     ]
 
     for i in range(0, training_rounds):
@@ -98,7 +98,7 @@ def training_method_01(model: nn.Module,
 
         # Create a batch of reward_generators
         reward_gens = [
-            reward_generator() for i in range(batch_size)
+            reward_generator() for _ in range(batch_size)
         ]
 
         # Create a tensor of the optimal lever pulls. Each row corresponds to
@@ -192,7 +192,7 @@ def training_method_01(model: nn.Module,
                 best_weights_locations.append(best_weights_location)
                 best_weights_location = None
                 best_weights_tot_rewards.append(best_weights_tot_reward)
-                print(f"{i} Rounds of Training Completed. "
+                print(f"{i+1} Rounds of Training Completed. "
                       f"Best mean total reward this window: "
                       f"{best_weights_tot_reward:.2f}")
                 best_weights_tot_reward = None
