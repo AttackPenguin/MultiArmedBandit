@@ -19,7 +19,7 @@ def training_method_01(model: nn.Module,
                        n: int = 10,
                        pulls: int = 100,
                        batch_size: int = 256,
-                       validation_size: int = 1000,
+                       validation_size: int = 100,
                        training_rounds: int = None,
                        save_dir: str = None,
                        validate_interval: int = 5,
@@ -39,7 +39,7 @@ def training_method_01(model: nn.Module,
         os.makedirs(save_dir)
 
     training_summary = (
-        f"{pd.Timestamp.now()}\n\n"
+        f"Training Started: {pd.Timestamp.now()}\n\n"
         f"Loss Function: {loss_fn.__class__.__name__}\n"
         f"Optimizer: {optimizer.__class__.__name__}\n"
         f"Number of Levers: {n}\n"
@@ -49,10 +49,12 @@ def training_method_01(model: nn.Module,
         f"Training Rounds: {training_rounds}\n"
         f"Validation Interval: {validate_interval}\n"
         f"Save Interval: {save_interval}\n\n"
+    )
+    print('\n' + training_summary)
+    training_summary += (
         f"Model Structure: \n\n"
         f"{model}"
     )
-    print(training_summary)
     summary_file_path = os.path.join(
         save_dir,
         "Training Configuration.txt"
@@ -142,7 +144,9 @@ def training_method_01(model: nn.Module,
         loss.backward()
         optimizer.step()
 
-        if (i+1 % validate_interval == 0 or i == training_rounds - 1) \
+        # If we've reached a validation interval, calculate rewards on
+        # validation generators and save data.
+        if ((i+1) % validate_interval == 0 or i == training_rounds - 1) \
                 and i != 0:
 
             # Deactivate training mode.
@@ -174,7 +178,7 @@ def training_method_01(model: nn.Module,
             # If we've reached the end of a window of training rounds,
             # or if we've completed our final iteration, save the best weights
             # in the window.
-            if (i+1 % save_interval == 0 or i == training_rounds - 1) \
+            if ((i+1) % save_interval == 0 or i == training_rounds - 1) \
                     and i != 0:
                 file_path = os.path.join(
                     save_dir,
@@ -193,10 +197,11 @@ def training_method_01(model: nn.Module,
                       f"{best_weights_tot_reward:.2f}")
                 best_weights_tot_reward = None
 
+                with open(best_weights_locs_file_path, 'wb') as f:
+                    pickle.dump(best_weights_locations, f)
+                with open(best_weights_tot_rew_file_path, 'wb') as f:
+                    pickle.dump(best_weights_tot_rewards, f)
+
             with open(rewards_file_path, 'wb') as f:
                 pickle.dump(mean_total_rewards, f)
-            with open(best_weights_locs_file_path, 'wb') as f:
-                pickle.dump(best_weights_locations, f)
-            with open(best_weights_tot_rew_file_path, 'wb') as f:
-                pickle.dump(best_weights_tot_rewards, f)
 
