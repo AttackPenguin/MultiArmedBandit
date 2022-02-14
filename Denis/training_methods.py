@@ -25,27 +25,6 @@ def training_method_01(model: nn.Module,
                        validate_interval: int = 5,
                        save_interval: int = 100):
 
-    training_summary = (
-        f"{pd.Timestamp.now()}\n\n"
-        f"Loss Function: {loss_fn.__name__}\n"
-        f"Optimizer: {optimizer.__name__}\n"
-        f"Number of Levers: {n}\n"
-        f"Number of Lever Pulls: {pulls}\n"
-        f"Batch Size: {batch_size}\n"
-        f"Validation Size: {validation_size}\n"
-        f"Training Rounds: {training_rounds}\n"
-        f"Validation Interval: {validate_interval}\n"
-        f"Save Interval: {save_interval}\n\n"
-        f"Model Structure: \n\n"
-        f"{model}"
-    )
-    summary_file_path = os.path.join(
-        save_dir,
-        "Training Configuration.txt"
-    )
-    with open(summary_file_path, 'w') as f:
-        f.write(training_summary)
-
     if save_interval % validate_interval != 0:
         raise ValueError(
             "validate_interval must evenly divide save_interval."
@@ -58,6 +37,28 @@ def training_method_01(model: nn.Module,
         )
     else:
         os.makedirs(save_dir)
+
+    training_summary = (
+        f"{pd.Timestamp.now()}\n\n"
+        f"Loss Function: {loss_fn.__class__.__name__}\n"
+        f"Optimizer: {optimizer.__class__.__name__}\n"
+        f"Number of Levers: {n}\n"
+        f"Number of Lever Pulls: {pulls}\n"
+        f"Batch Size: {batch_size}\n"
+        f"Validation Size: {validation_size}\n"
+        f"Training Rounds: {training_rounds}\n"
+        f"Validation Interval: {validate_interval}\n"
+        f"Save Interval: {save_interval}\n\n"
+        f"Model Structure: \n\n"
+        f"{model}"
+    )
+    print(training_summary)
+    summary_file_path = os.path.join(
+        save_dir,
+        "Training Configuration.txt"
+    )
+    with open(summary_file_path, 'w') as f:
+        f.write(training_summary)
 
     if training_rounds is None:
         training_rounds = 1_000_000_000_000_000
