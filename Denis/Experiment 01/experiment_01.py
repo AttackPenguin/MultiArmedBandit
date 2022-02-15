@@ -7,7 +7,7 @@ from torch import nn
 
 from Denis.nn_models import MABInceptionModel
 from Denis.reward_generators import RewardGeneratorTruncNorm
-from Denis.training_methods import training_method_01
+from Denis.training_methods import train_track_loss
 
 model = MABInceptionModel()
 
@@ -17,15 +17,14 @@ print(f"Started at: {dttm_start}")
 loss_fn = nn.BCELoss()
 optimizer = torch.optim.Adam(
     model.parameters(),
-    lr=0.1
+    lr=0.001
 )
-training_method_01(
+train_track_loss(
     model,
     loss_fn,
     optimizer,
     RewardGeneratorTruncNorm,
-    batch_size=128,
+    batch_size=32,
     save_dir=f"{pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}",
-    validate_interval=5,
     save_interval=100
 )
