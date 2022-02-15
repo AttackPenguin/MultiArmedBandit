@@ -1,3 +1,4 @@
+import os
 import random
 import gym
 import numpy as np
@@ -7,7 +8,10 @@ from gym import spaces
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3 import PPO, A2C
 from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.evaluation import evaluate_policy
 from loss_functions import loss_func
+from callbacks import SaveOnBestTrainingRewardCallback
+
 
 class MAB(gym.Env):
     metadata = {'render.modes': ['console']}
@@ -129,36 +133,37 @@ class MAB(gym.Env):
 def train_model(training_len = 1000, g=0.95, lr=0.0007, steps=1):
     """Train the model."""
     env = MAB()
-    env = make_vec_env(lambda: env, n_envs=1)
+    # env = make_vec_env(lambda: env, n_envs=1)
     model = A2C("MlpPolicy",
                 env, verbose=1, 
                 gamma=g,
                 learning_rate=lr,
                 n_steps=steps).learn(training_len)
     env.render()
+    return model
+
+def eval_model(env, model):
+    """Evaluate model on new data"""
+    env.reset()
+    model.predict()
+
 
 if __name__ == '__main__':
     # Check environment for compliance with gym
     env = MAB()
     check_env(env, warn=True)
 
-    # Initialize and train the model
-    train_model(g=0.9, lr=0.001)
-    
+    # Create and wrap the environment
+    env = MAB()
+    model = A2C('MlpPolicy', 
+                env, gamma=0.1,
+                learning_rate=0.0006,
+                n_steps=1,
+                vf_coef=0.9,
+                verbose=1).learn(1000)
+    env.render()
 
-    # Run the trained model on 1000 timesteps
-    # obs = env.reset()
-    # n_steps = 500
-    # for step in range(n_steps):
-    #     action, _ = model.predict(obs, deterministic=False)
-    #     if step < 5 or step > n_steps-5:
-    #         print("Step {}".format(step + 1))
-    #         print("Action: ", action)
-    #         obs, reward, done, info = env.step(action)
-    #         print('obs=', obs, 'reward=', reward, 'done=', done, 'payout=', info)
-    #     else:
-    #         obs, regret, done, info = env.step(action)
-    # env.render()
+    # model = train_model(training_len=100, g=0.1, lr=0.0006)
 
-    # Good explanation why we set deterministic to False
-    # https://stackoverflow.com/questions/66455636/what-does-deterministic-true-in-stable-baselines3-library-means
+    # model.save('mods/A2C_g88_lr0008')
+    # model = A2C.load('mods/A2C_g88_lr0008')

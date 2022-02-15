@@ -13,6 +13,7 @@ def loss_func(payout, action, arm2reward, arm2r_hat):
     arm2reward : Dictionary storing the history of payouts for each arm
     arm2r_hat : Dictionary storing the expected return for each arm
     """
+    n=0.9
     for arm in arm2reward:
         if arm2reward[arm]:
             r_hat = np.mean(arm2reward[arm])
@@ -21,8 +22,8 @@ def loss_func(payout, action, arm2reward, arm2r_hat):
         arm2r_hat[arm] = r_hat
     max_r_hat = max(arm2r_hat.values())
     std = np.std(arm2reward[action])
-    if payout - max_r_hat + std != 0:
-        reward = float((payout - max_r_hat + std)**-1)
+    if payout - max_r_hat + n*std != 0:
+        reward = float((payout - max_r_hat + n*std)**-1)
     else:
         reward = 1000
     return reward
