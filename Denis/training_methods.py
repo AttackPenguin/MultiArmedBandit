@@ -335,7 +335,7 @@ def train_track_loss(model: nn.Module,
         losses.append(float(loss))
         # if loss is equal to or better than the best loss in losses,
         # save weights and update best_weights_location and best_weight_loss
-        if float(loss) >= max(losses):
+        if float(loss) <= max(losses[-1*(i % save_interval):]):
             best_weights = model.state_dict().copy()
             best_weights_location = i
             best_weights_loss = float(loss)
