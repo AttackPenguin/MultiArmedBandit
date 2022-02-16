@@ -19,7 +19,7 @@ def train_track_reward(model: nn.Module,
                        n: int = 10,
                        pulls: int = 100,
                        batch_size: int = 256,
-                       validation_size: int = 1000,
+                       validation_size: int = 100,
                        training_rounds: int = None,
                        save_dir: str = None,
                        validate_interval: int = 5,
@@ -206,7 +206,6 @@ def train_track_reward(model: nn.Module,
                 pickle.dump(mean_total_rewards, f)
 
 
-
 def train_track_loss(model: nn.Module,
                      loss_fn: callable,
                      optimizer: torch.optim.Optimizer,
@@ -349,7 +348,6 @@ def train_track_loss(model: nn.Module,
         if ((i + 1) % save_interval == 0 or i == training_rounds - 1) \
                 and i != 0:
 
-
             file_path = os.path.join(
                 save_dir,
                 f"model_weights_round_"
@@ -361,8 +359,8 @@ def train_track_loss(model: nn.Module,
             best_weights_losses.append(best_weights_loss)
             best_weights_locations.append(best_weights_location)
             print(f"{i + 1} Rounds of Training Completed. "
-                  f"Best mean total reward this window: "
-                  f"{best_weights_loss:.2f}")
+                  f"Best loss this window: "
+                  f"{best_weights_loss:.5f}")
             best_weights = None
             best_weights_location = None
             best_weights_loss = None
