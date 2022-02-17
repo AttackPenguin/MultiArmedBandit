@@ -17,14 +17,14 @@ print(f"Started at: {dttm_start}")
 loss_fn = nn.BCELoss()
 optimizer = torch.optim.Adam(
     model.parameters(),
-    lr=0.001
+    lr=0.0001
 )
 train_track_loss(
     model,
     loss_fn,
     optimizer,
     RewardGeneratorTruncNorm,
-    batch_size=32,
+    batch_size=128,
     save_dir=f"{pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}",
-    save_interval=100
+    save_interval=25
 )
