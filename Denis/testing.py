@@ -8,7 +8,7 @@ def main():
     g_training_loss(
         os.path.join(
             "/home/denis/PycharmProjects/MultiArmedBandit/"
-            "Denis/Experiment 01/2022-02-15 20:29:27"
+            "Denis/Experiment 01/2022-02-16 14:55:55"
         )
     )
 
