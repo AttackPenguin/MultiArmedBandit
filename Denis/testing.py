@@ -3,6 +3,10 @@ from __future__ import annotations
 import os
 import pickle
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+sns.set()
 
 def main():
     g_training_loss(
@@ -41,7 +45,29 @@ def g_training_loss(
     with open(bw_losses_file_path, 'rb') as file:
         bw_losses = pickle.load(file)
 
-    pass
+    if start is None:
+        start = 0
+    if end is None:
+        end = len(losses)
+
+    fig: plt.Figure = plt.figure()
+    ax: plt.Axes = fig.add_subplot()
+    bw_indices = [
+        bw_locations.index(value)
+        for value in bw_locations
+        if start <= value <= end
+    ]
+
+    ax.plot(
+        range(start+1, end+1),
+        losses(start, end)
+    )
+    ax.plot(
+        [index+1 for index in bw_indices],
+        [bw_locations[index] for index in bw_indices]
+    )
+
+    fig.show()
 
 
 if __name__ == '__main__':

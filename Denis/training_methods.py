@@ -24,6 +24,11 @@ def train_track_reward(model: nn.Module,
                        save_dir: str = None,
                        validate_interval: int = 5,
                        save_interval: int = 100):
+
+    raise Exception(
+        "train_track_reward is out of date. Use train_track_loss."
+    )
+
     if save_interval % validate_interval != 0:
         raise ValueError(
             "validate_interval must evenly divide save_interval."
