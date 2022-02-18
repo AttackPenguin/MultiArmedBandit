@@ -282,6 +282,8 @@ def train_track_loss(model: nn.Module,
     best_weights_loss = None
     # Accumulates best_weights_loss for plotting later
     best_weights_losses = list()
+    # Create an empty list to store losses for the current save_interval.
+    recent_losses = list()
 
     for i in range(0, training_rounds):
         # Set to training mode.
@@ -337,9 +339,10 @@ def train_track_loss(model: nn.Module,
 
         # Store loss in losses:
         losses.append(float(loss))
+        recent_losses.append(float(loss))
         # if loss is equal to or better than the best loss in losses,
         # save weights and update best_weights_location and best_weight_loss
-        if float(loss) <= max(losses[-1*(i % save_interval):]):
+        if float(loss) <= min(recent_losses):
             best_weights = model.state_dict().copy()
             best_weights_location = i
             best_weights_loss = float(loss)
@@ -353,11 +356,17 @@ def train_track_loss(model: nn.Module,
         if ((i + 1) % save_interval == 0 or i == training_rounds - 1) \
                 and i != 0:
 
+            if (i+1) % save_interval == 0:
+                training_window = str((i+1) // save_interval)
+            else:
+                training_window = str((i+1) // save_interval + 1)
+            while len(training_window) < 4:
+                training_window = '0' + training_window
             file_path = os.path.join(
                 save_dir,
-                f"model_weights_round_"
-                f"{best_weights_location}_"
-                f"mtr_"
+                f"model_weights_training_window_"
+                f"{training_window}_"
+                f"loss_"
                 f"{best_weights_loss:.5f}.pth"
             )
             torch.save(best_weights, file_path)
