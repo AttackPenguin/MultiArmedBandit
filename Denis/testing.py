@@ -16,21 +16,21 @@ sns.set()
 
 
 def main():
-    # g_training_loss(
-    #     os.path.join(
-    #         "/home/denis/PycharmProjects/MultiArmedBandit/"
-    #         "Denis/Experiment 01/2022-02-16 14:55:55"
-    #     ),
-    #     show_best_weights=True,
-    #     start=None,
-    #     end=None
-    # )
+    g_training_loss(
+        os.path.join(
+            "/home/denis/PycharmProjects/MultiArmedBandit/"
+            "Denis/Experiment 01/2022-02-16 14:55:55"
+        ),
+        show_best_weights=True,
+        start=None,
+        end=None
+    )
 
     gens = get_baseline_generators(
         RewardGeneratorTruncNorm
     )
     levers, rewards, total_rewards, opt_total_rewards = \
-        get_reward_data(
+        get_reward_data_from_nn(
             "/home/denis/PycharmProjects/MultiArmedBandit/"
             "Denis/Experiment 01/2022-02-16 14:55:55/"
             "model_weights_round_16624_mtr_0.24146.pth",
@@ -43,15 +43,16 @@ def main():
     )
     plt.show()
     plt.cla()
-    reward_by_round = np.array(rewards).transpose()
-    reward_by_round = np.mean(
-        reward_by_round, axis=1
+    reward_by_round_t = np.array(rewards).transpose()
+    reward_by_round_mean = np.mean(
+        reward_by_round_t, axis=1
     )
     plt.plot(
-        range(len(reward_by_round)),
-        reward_by_round
+        range(len(reward_by_round_mean)),
+        reward_by_round_mean
     )
     plt.show()
+    pass
 
 
 def g_training_loss(
@@ -124,16 +125,22 @@ def g_training_loss(
 def get_baseline_generators(
         generator: Type[RewardGenerator],
         num_gens: int = 10_000,
-        seed: int = 666
+        seed: int = 666,
+        load_pickled: bool | str = False
 ):
+    # if load_pickled is False, then we create generators using the
+    # seed value. If a string, then treat it as the path to a file,
+    # and see if there is a file of pickled generators to return.
+    if load_pickled:
+        pass  # Needs implementation
     np.random.seed(seed)
     reward_gens = [
-        generator() for _ in range(seed)
+        generator() for _ in range(num_gens)
     ]
     return reward_gens
 
 
-def get_reward_data(
+def get_reward_data_from_nn(
         file_path: str,
         generators: list[RewardGenerator],
         model=MABInceptionModel
@@ -149,6 +156,13 @@ def get_reward_data(
         for gen in generators
     ]
     return levers, rewards, total_rewards, opt_total_rewards
+
+
+def get_reward_data_from_method(
+        generators: list[RewardGenerator],
+        method: callable
+):
+    pass
 
 
 if __name__ == '__main__':

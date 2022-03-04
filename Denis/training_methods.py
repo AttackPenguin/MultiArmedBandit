@@ -378,6 +378,7 @@ def train_track_loss(model: nn.Module,
             best_weights = None
             best_weights_location = None
             best_weights_loss = None
+            recent_losses = list()
 
             with open(best_weights_locs_file_path, 'wb') as f:
                 pickle.dump(best_weights_locations, f)

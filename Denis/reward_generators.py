@@ -140,7 +140,7 @@ class RewardGeneratorChallenging(RewardGenerator):
             raise ValueError(f"n is {n}, must be in range [0, {self.n-1}].")
 
         return (
-            stats.beta(self.alphas[n], self.betas[n]) *
+            stats.beta(self.alphas[n], self.betas[n]).rvs() *
             (self.max_value - self.min_value) +
             self.min_value
         )
