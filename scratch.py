@@ -1,7 +1,15 @@
-import os
+from scipy import stats
 
-import numpy as np
-import torch
-from torch import nn
+# dist = stats.expon()
 
-print(str((24+1) // 25))
+# counter = 0
+# for i in range(100):
+#     value = float(dist.rvs() * 5)
+#     print(value)
+#     if value < 1:
+#         counter += 1
+#
+# print(counter)
+
+dist = stats.beta(.5, .01)
+print(dist.mean())
