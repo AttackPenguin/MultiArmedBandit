@@ -19,39 +19,39 @@ def main():
     g_training_loss(
         os.path.join(
             "/home/denis/PycharmProjects/MultiArmedBandit/"
-            "Denis/Experiment 01/2022-02-16 14:55:55"
+            "Denis/Experiment 02/2022-03-04 15:27:08"
         ),
         show_best_weights=True,
         start=None,
         end=None
     )
 
-    gens = get_baseline_generators(
-        RewardGeneratorTruncNorm
-    )
-    levers, rewards, total_rewards, opt_total_rewards = \
-        get_reward_data_from_nn(
-            "/home/denis/PycharmProjects/MultiArmedBandit/"
-            "Denis/Experiment 01/2022-02-16 14:55:55/"
-            "model_weights_round_16624_mtr_0.24146.pth",
-            gens
-        )
-    plt.hist(
-        total_rewards,
-        bins=100,
-        density=True
-    )
-    plt.show()
-    plt.cla()
-    reward_by_round_t = np.array(rewards).transpose()
-    reward_by_round_mean = np.mean(
-        reward_by_round_t, axis=1
-    )
-    plt.plot(
-        range(len(reward_by_round_mean)),
-        reward_by_round_mean
-    )
-    plt.show()
+    # gens = get_baseline_generators(
+    #     RewardGeneratorTruncNorm
+    # )
+    # levers, rewards, total_rewards, opt_total_rewards = \
+    #     get_reward_data_from_nn(
+    #         "/home/denis/PycharmProjects/MultiArmedBandit/"
+    #         "Denis/Experiment 01/2022-02-16 14:55:55/"
+    #         "model_weights_round_16624_mtr_0.24146.pth",
+    #         gens
+    #     )
+    # plt.hist(
+    #     total_rewards,
+    #     bins=100,
+    #     density=True
+    # )
+    # plt.show()
+    # plt.cla()
+    # reward_by_round_t = np.array(rewards).transpose()
+    # reward_by_round_mean = np.mean(
+    #     reward_by_round_t, axis=1
+    # )
+    # plt.plot(
+    #     range(len(reward_by_round_mean)),
+    #     reward_by_round_mean
+    # )
+    # plt.show()
     pass
 
 

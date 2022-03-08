@@ -88,7 +88,10 @@ class RewardGeneratorChallenging(RewardGenerator):
 
 
     """
-    def __init__(self, n: int = 10, range_multiplier = 10):
+    def __init__(self,
+                 n: int = 10,
+                 range_mult_low: int = 1,
+                 range_mult_high: int = 10):
         """
         :param n: The number of distributions to create.
         :param std: The standard deviation of the distributions.
@@ -107,8 +110,8 @@ class RewardGeneratorChallenging(RewardGenerator):
         values = [
             expon_dist.rvs(),
             expon_dist.rvs()]
-        self.min_value = min(values)
-        self.max_value = max(values) * range_multiplier
+        self.min_value = min(values) * range_mult_low
+        self.max_value = max(values) * range_mult_high
 
         # Randomly generate alpha and beta values for beta distributions
         # attached to levers. Store both in lists. Levers will be specified
