@@ -201,21 +201,21 @@ class MABInceptionModel2(nn.Module):
             # input size as we add modules.
             components[f'mod{i}lin1'] = nn.Linear(i * (n + 1), module_width)
             if use_batch_norm:
-                components[f'mod{i}bn1'] = nn.BatchNorm1d(module_width)
+                components[f'mod{i}bn1'] = nn.BatchNorm1d(1)
             components[f'mod{i}rrelu1'] = nn.RReLU()
             if use_dropout:
                 components[f'mod{i}dropout1'] = nn.Dropout(p=dropout_ratio)
 
             components[f'mod{i}lin2'] = nn.Linear(module_width, module_width)
             if use_batch_norm:
-                components[f'mod{i}bn2'] = nn.BatchNorm1d(module_width)
+                components[f'mod{i}bn2'] = nn.BatchNorm1d(1)
             components[f'mod{i}rrelu2'] = nn.RReLU()
             if use_dropout:
                 components[f'mod{i}dropout2'] = nn.Dropout(p=dropout_ratio)
 
             components[f'mod{i}lin3'] = nn.Linear(module_width, module_width)
             if use_batch_norm:
-                components[f'mod{i}bn3'] = nn.BatchNorm1d(module_width)
+                components[f'mod{i}bn3'] = nn.BatchNorm1d(1)
             components[f'mod{i}rrelu3'] = nn.RReLU()
             if use_dropout:
                 components[f'mod{i}dropout3'] = nn.Dropout(p=dropout_ratio)
@@ -230,9 +230,10 @@ class MABInceptionModel2(nn.Module):
             module = nn.Sequential(components)
             self.modules_list.append(module)
 
-    def forward(self,
-                reward_generators: list[RewardGenerator],
-                device: str):
+    def forward(
+        self,
+        reward_generators: list[RewardGenerator]
+    ):
         """
         The forward method gets a list of RewardGenerator objects, rather than
         a tensor of input values. The reward generators calculate a reward
@@ -253,7 +254,7 @@ class MABInceptionModel2(nn.Module):
         # len(reward_generators) is our batch size.
         module_input = torch.rand(
             (len(reward_generators), self.n), requires_grad=True
-        ).to(device)
+        )
 
         # We iterate through each of the input tensors, calculating which
         # lever is pulled and the resulting reward. We append these results
@@ -281,10 +282,10 @@ class MABInceptionModel2(nn.Module):
         # of outputs.
         local_rewards = torch.Tensor(rewards).reshape(
             [len(reward_generators), 1, 1]
-        ).to(device)
+        )
         module_input = torch.cat(
             [module_input, local_rewards], dim=2
-        ).to(device)
+        )
 
         # module_outputs will accumulate the output layers of the modules. We
         # will return this Tensor, and our loss and optimization methods will
@@ -304,7 +305,7 @@ class MABInceptionModel2(nn.Module):
             # next module.
             if module_output is not None:  # First pass only
                 module_input = \
-                    torch.cat((module_input, module_output), dim=2).to(device)
+                    torch.cat((module_input, module_output), dim=2)
             # Do a forward pass through the module.
             module_output = module(module_input)
 
@@ -314,7 +315,7 @@ class MABInceptionModel2(nn.Module):
             for i, x in enumerate(module_output):
                 max_indices = list(torch.ravel(
                     (x == torch.max(x)).nonzero(as_tuple=True)[1]
-                ))
+                ).to('cpu'))
                 # There is a very small chance of getting two identical values
                 # in our output vector, so we invoke np.random.choice to deal
                 # with this possibility.
@@ -335,9 +336,9 @@ class MABInceptionModel2(nn.Module):
                 )
             local_rewards = torch.Tensor(local_rewards).reshape(
                 [len(reward_generators), 1, 1]
-            ).to(device)
+            )
             module_output = torch.cat(
                 [module_output, local_rewards], dim=2
-            ).to(device)
+            )
 
         return module_outputs, levers, rewards

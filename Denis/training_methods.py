@@ -285,10 +285,6 @@ def train_track_loss(model: nn.Module,
     # Create an empty list to store losses for the current save_interval.
     recent_losses = list()
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"Using {device} device")
-    model.to(device)
-
     for i in range(0, training_rounds):
         # Set to training mode.
         model.train(True)
@@ -330,11 +326,9 @@ def train_track_loss(model: nn.Module,
                 (optimal_outputs, optimal_output), dim=0
             )
 
-        optimal_outputs.to(device)
-
         # Do a forward pass. We don't care about the lever pulls or rewards
         # when we're optimizing.
-        module_outputs, _, _ = model(reward_gens, device)
+        module_outputs, _, _ = model(reward_gens)
         # Loss is calculated by comparing the optimal pulls to the actual
         # pulls tensors.
         loss = loss_fn(module_outputs, optimal_outputs)
