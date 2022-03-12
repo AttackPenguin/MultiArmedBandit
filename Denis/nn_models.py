@@ -169,9 +169,7 @@ class MABInceptionModel(nn.Module):
 
 class MABInceptionModel2(nn.Module):
     """
-    The major change in this model is that reward values are amplified as
-    input by feeding them into a single dense layer before densely connecting
-    to the block that will calculate the next lever pull.
+    Added batch normalization.
     """
 
     def __init__(self,
