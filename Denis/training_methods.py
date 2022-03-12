@@ -350,6 +350,8 @@ def train_track_loss(model: nn.Module,
         with open(losses_file_path, 'wb') as f:
             pickle.dump(losses, f)
 
+        # print(f"Round {i+1} completed. Loss: {loss:.5f}")
+
         # If we've reached the end of a window of training rounds,
         # or if we've completed our final iteration, save the best weights
         # in the window.
@@ -374,7 +376,7 @@ def train_track_loss(model: nn.Module,
             best_weights_locations.append(best_weights_location)
             print(f"{i + 1} Rounds of Training Completed. "
                   f"Best loss this window: "
-                  f"{best_weights_loss:.5f}")
+                  f"{best_weights_loss:.5f}.")
             best_weights = None
             best_weights_location = None
             best_weights_loss = None

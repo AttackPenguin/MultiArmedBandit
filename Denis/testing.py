@@ -9,8 +9,8 @@ import numpy as np
 import seaborn as sns
 import torch
 
-from Denis.nn_models import MABInceptionModel
-from Denis.reward_generators import RewardGenerator, RewardGeneratorTruncNorm
+from Denis.nn_models import MABInceptionModel2
+from Denis.reward_generators import RewardGenerator, RewardGeneratorChallenging
 
 sns.set()
 
@@ -19,7 +19,7 @@ def main():
     g_training_loss(
         os.path.join(
             "/home/denis/PycharmProjects/MultiArmedBandit/"
-            "Denis/Experiment 02/2022-03-04 15:27:08"
+            "Denis/Experiment 03/2022-03-09 11:50:58"
         ),
         show_best_weights=True,
         start=None,
@@ -27,13 +27,13 @@ def main():
     )
 
     # gens = get_baseline_generators(
-    #     RewardGeneratorTruncNorm
+    #     RewardGeneratorChallenging
     # )
     # levers, rewards, total_rewards, opt_total_rewards = \
     #     get_reward_data_from_nn(
-    #         "/home/denis/PycharmProjects/MultiArmedBandit/"
-    #         "Denis/Experiment 01/2022-02-16 14:55:55/"
-    #         "model_weights_round_16624_mtr_0.24146.pth",
+    #         "/home/denis/PycharmProjects/MultiArmedBandit/Denis/"
+    #         "Experiment 03/2022-03-08 20:50:40/"
+    #         "model_weights_training_window_0013_loss_0.31799.pth",
     #         gens
     #     )
     # plt.hist(
@@ -143,7 +143,7 @@ def get_baseline_generators(
 def get_reward_data_from_nn(
         file_path: str,
         generators: list[RewardGenerator],
-        model=MABInceptionModel
+        model=MABInceptionModel2
 ):
     model = model()
     model.load_state_dict(torch.load(file_path))

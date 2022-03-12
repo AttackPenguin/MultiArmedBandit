@@ -11,6 +11,7 @@ from Denis.training_methods import train_track_loss
 
 model = MABInceptionModel2(
     use_dropout=True,
+    dropout_ratio=0.05,
     use_batch_norm=True
 )
 
@@ -20,7 +21,7 @@ print(f"Started at: {dttm_start}")
 loss_fn = nn.BCELoss()
 optimizer = torch.optim.Adam(
     model.parameters(),
-    lr=0.0001
+    lr=0.0008
 )
 train_track_loss(
     model,
@@ -29,5 +30,5 @@ train_track_loss(
     RewardGeneratorChallenging,
     batch_size=1024,
     save_dir=f"{pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}",
-    save_interval=25
+    save_interval=10
 )
