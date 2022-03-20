@@ -4,13 +4,14 @@ import gym
 import numpy as np
 import scipy.stats
 import matplotlib.pyplot as plt
+from collections import Counter
 from gym import spaces
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3 import PPO, A2C
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 from loss_functions import loss_func
-from callbacks import SaveOnBestTrainingRewardCallback
+# from callbacks import SaveOnBestTrainingRewardCallback
 
 
 class MAB(gym.Env):
@@ -111,6 +112,8 @@ class MAB(gym.Env):
         plt.tight_layout()
         plt.show();
 
+        return self.list_actions
+
     def beta_dist(self):
         """
         Initialize arms according to a beta distribution
@@ -147,22 +150,52 @@ def eval_model(env, model):
     env.reset()
     model.predict()
 
+def regret(a_val,b_val,actions,T):
+    expected_value = []
+    for a,b in zip(a_val, b_val):
+        expected_value.append(a/(a+b))
+    r_star = max(expected_value)
+    regret_list = [t*r_star - cums]
+    return T * r_star - 
+        
 
 if __name__ == '__main__':
     # Check environment for compliance with gym
     env = MAB()
     check_env(env, warn=True)
 
+    T = 100
+    # Easy
+    a = [1,1,1,1,20]
+    b = [2,3,4,5,1]
+
+    # Hard 
+    # a = [1,1,1,1,1]
+    # b = [2,2.5,1.5,1.75,2.25]
     # Create and wrap the environment
-    env = MAB()
+    env = MAB(a_vals=a, b_vals=b)
     model = A2C('MlpPolicy', 
                 env, gamma=0.1,
                 learning_rate=0.0006,
                 n_steps=1,
                 vf_coef=0.9,
-                verbose=1).learn(1000)
-    env.render()
+                verbose=1).learn(T)
+    train_arm_list = env.render()
+    train_arm_list
+    arm2counts = Counter(train_arm_list)
+    plt.bar(arm2counts.keys(), arm2counts.values())
+    plt.show();
 
+    # Test the trained model
+    test_arm_list = []
+    obs = env.reset()
+    for step in range(1000-T):
+        action, _ = model.predict(obs, deterministic=False)
+        test_arm_list.append(action)
+    
+    action_list = train_arm_list + test_arm_list
+
+    # 
     # model = train_model(training_len=100, g=0.1, lr=0.0006)
 
     # model.save('mods/A2C_g88_lr0008')
