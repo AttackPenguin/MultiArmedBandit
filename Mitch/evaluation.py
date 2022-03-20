@@ -1,6 +1,5 @@
-from tabnanny import verbose
 from rl_model import *
-from mab import *
+from heuristic_mab import *
 
 
 env = MAB()
@@ -13,7 +12,7 @@ env = MAB(a_vals=a, b_vals=b)
 model = A2C('MlpPolicy',
             env,
             gamma=0.1,
-            learning_rate=0.0006,
+            learning_rate=0.0008,
             n_steps=1,
             vf_coef=0.9,
             verbose=1).learn(T)
