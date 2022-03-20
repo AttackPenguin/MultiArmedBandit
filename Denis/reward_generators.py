@@ -8,7 +8,7 @@ from scipy import stats
 
 class RewardGenerator:
     @abstractmethod
-    def __init__(self):
+    def __init__(self, **kwargs):
         pass
 
     @abstractmethod
