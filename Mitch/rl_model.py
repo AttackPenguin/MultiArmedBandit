@@ -11,6 +11,7 @@ from stable_baselines3 import PPO, A2C
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 from loss_functions import loss_func
+from heuristic_mab import Heuristic_MAB
 # from callbacks import SaveOnBestTrainingRewardCallback
 
 
@@ -85,7 +86,7 @@ class MAB(gym.Env):
         done = False
 
         return obs, reward, done, info
-    
+
     def render(self, mode='console'):
         """
         Generate visualization of 
@@ -112,6 +113,23 @@ class MAB(gym.Env):
         plt.tight_layout()
         plt.show();
 
+        # Plot Heuristics
+        self.run_heuristics()
+        self.random_gamble.plot_individual_gamble("Random Gamble")
+        self.greedy_gamble.plot_individual_gamble("Greedy Gamble")
+        self.epsilon_greedy.plot_individual_gamble("Epsilon-Greedy")
+        self.epsilon_first_greedy.plot_individual_gamble("Epsilon-First")
+        self.ucb.plot_individual_gamble("UCB")
+
+        # Overlay RL algorithm
+        cum_rewards = np.array(self.rewards).cumsum()
+        self.regrets = [t*self.r_star - cum_rewards[t] for t in range(self.T)]
+        plt.plot(range(self.T), self.regrets, label="RL")
+        plt.legend()
+        plt.title("Regret of an individual gamble")
+        plt.tight_layout()
+        plt.show();
+
         return self.list_actions
 
     def beta_dist(self):
@@ -132,6 +150,25 @@ class MAB(gym.Env):
     def play_arm(self, arm, n_pulls=1):
         """Return random samples from playing an arm."""
         return self.arm2pull[arm].rvs(n_pulls)
+    
+    def run_heuristics(self):
+        # Set parameter for epsilon_first_greedy
+        m = 5
+
+        # Prepare separate models for each algorithm
+        self.random_gamble = Heuristic_MAB(self.a, self.b)
+        self.greedy_gamble = Heuristic_MAB(self.a, self.b)
+        self.epsilon_greedy = Heuristic_MAB(self.a, self.b)
+        self.epsilon_first_greedy = Heuristic_MAB(self.a, self.b)
+        self.ucb = Heuristic_MAB(self.a, self.b)
+
+        # Initialize each algorithm
+        self.random_gamble.gamble(self.T, eps=1, m=1)
+        self.greedy_gamble.gamble(self.T, eps=0, m=1)
+        self.epsilon_greedy.gamble(self.T, eps=0.1, m=1)
+        self.epsilon_first_greedy.gamble(self.T, eps=0, m=m)
+        self.ucb.gamble(self.T, eps=0, m=1, UCB=True)
+
 
 def train_model(training_len = 1000, g=0.95, lr=0.0007, steps=1):
     """Train the model."""
