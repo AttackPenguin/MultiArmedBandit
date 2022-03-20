@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 import scipy, scipy.stats
 
 
-class MAB:
+class Heuristic_MAB:
     def __init__(self, a=[2,3,4,5,6], b=[6,5,4,3,2]):
         self.arm2pull = {}
         self.arm2trueExpectedReward = {}
@@ -187,11 +187,11 @@ def run_all_simulations(a,b):
     m=20
 
     # Prepare separate models for each algorithm
-    random_gamble = MAB(a,b)
-    greedy_gamble = MAB(a,b)
-    epsilon_greedy = MAB(a,b)
-    epsilon_first_greedy = MAB(a,b)
-    ucb = MAB(a,b)
+    random_gamble = Heuristic_MAB(a,b)
+    greedy_gamble = Heuristic_MAB(a,b)
+    epsilon_greedy = Heuristic_MAB(a,b)
+    epsilon_first_greedy = Heuristic_MAB(a,b)
+    ucb = Heuristic_MAB(a,b)
 
     # Visualize the reward distribution
     random_gamble.plot_distribution()

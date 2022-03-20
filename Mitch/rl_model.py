@@ -150,13 +150,13 @@ def eval_model(env, model):
     env.reset()
     model.predict()
 
-def regret(a_val,b_val,actions,T):
-    expected_value = []
-    for a,b in zip(a_val, b_val):
-        expected_value.append(a/(a+b))
-    r_star = max(expected_value)
-    regret_list = [t*r_star - cums]
-    return T * r_star - 
+# def regret(a_val,b_val,actions,T):
+#     expected_value = []
+#     for a,b in zip(a_val, b_val):
+#         expected_value.append(a/(a+b))
+#     r_star = max(expected_value)
+#     regret_list = [T*r_star - cums]
+#     return T * r_star - regret_list
         
 
 if __name__ == '__main__':
