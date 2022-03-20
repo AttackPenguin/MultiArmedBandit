@@ -19,7 +19,7 @@ def main():
     g_training_loss(
         os.path.join(
             "/home/denis/PycharmProjects/MultiArmedBandit/"
-            "Denis/Experiment 03/2022-03-09 11:50:58"
+            "Denis/Experiment 02/2022-03-04 15:27:08"
         ),
         show_best_weights=True,
         start=None,
