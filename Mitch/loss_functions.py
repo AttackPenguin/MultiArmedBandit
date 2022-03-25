@@ -1,6 +1,23 @@
 import numpy as np
 
 
+def loss_func1(payout, action, arm2reward, arm2sum, arm2num):
+    n=0
+    arm2sum[action] += payout
+    arm2num[action] += 1
+    arm2mu_est = {a:arm2sum[a]/arm2num[a] for a in arm2sum.keys() if arm2num[a] > 0}
+    std = np.std(arm2reward[action])
+    e = std
+    best = max(arm2mu_est.values())
+    # best_arm = [a for a in arm2mu_est if arm2mu_est[a] == best]
+    # e = np.std(best_arm)
+    if 0-e <= (payout - best + n*std) <= 0+e:
+        reward = 10_000
+    else:
+        reward = float((payout - best) **-1)
+    return reward
+
+
 def loss_func(payout, action, arm2reward, arm2r_hat):
     """
     Compare the payout with the mean from the best arm. The standard deviation
