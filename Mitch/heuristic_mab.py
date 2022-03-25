@@ -124,7 +124,7 @@ class Heuristic_MAB:
         self.arm2num = arm2num
         return T*self.mu_star - sum(self.rewards)
     
-    def plot_individual_gamble(self, plt_label):
+    def plot_individual_heuristic_gamble(self, plt_label):
         """Plot the regret over time for a single run."""
         cum_rewards = np.array(self.rewards).cumsum()
         self.regrets = [t*self.mu_star - cum_rewards[t] for t in range(self.T)]
@@ -134,7 +134,7 @@ class Heuristic_MAB:
         plt.xlabel("Duration of gamble $T$")
         plt.ylabel("Regret $R$")
     
-    def plot_average_gamble(self, plt_label, eps=0, m=1, num_runs=100, ucb=False):
+    def plot_average_heuristic_gamble(self, plt_label, eps=0, m=1, num_runs=100, ucb=False):
         """
         Plot the regret over time averaged over a specified number of runs.
         
@@ -206,10 +206,10 @@ def run_all_simulations(a,b):
     ucb.gamble(1000, eps=0, m=1, UCB=True)
 
     # Compare each algorithm
-    random_gamble.plot_individual_gamble("Random Gamble")
-    greedy_gamble.plot_individual_gamble("Greedy Gamble")
-    epsilon_greedy.plot_individual_gamble("Epsilon-Greedy")
-    epsilon_first_greedy.plot_individual_gamble("Epsilon-First")
+    random_gamble.plot_indidual_heuristic_gamle("Random Gamble")
+    greedy_gamble.plot_indidual_heuristic_gamle("Greedy Gamble")
+    epsilon_greedy.plot_indidual_heuristic_gamle("Epsilon-Greedy")
+    epsilon_first_greedy.plot_indidual_heuristic_gamle("Epsilon-First")
     plt.title("Regret of an individual gamble")
     plt.tight_layout()
     plt.show();
@@ -218,10 +218,10 @@ def run_all_simulations(a,b):
     print("Plotting the average regret over 100 runs for all algorithms...")
 
     # Compare average regret
-    random_gamble.plot_average_gamble("Random Gamble", eps=1, m=1)
-    greedy_gamble.plot_average_gamble("Greedy Gamble", eps=0, m=1)
-    epsilon_greedy.plot_average_gamble("Epsilon-Greedy", eps=0.1, m=1)
-    epsilon_first_greedy.plot_average_gamble("Epsilon-First", eps=0, m=m)
+    random_gamble.plot_average_heuristic_gamble("Random Gamble", eps=1, m=1)
+    greedy_gamble.plot_average_heuristic_gamble("Greedy Gamble", eps=0, m=1)
+    epsilon_greedy.plot_average_heuristic_gamble("Epsilon-Greedy", eps=0.1, m=1)
+    epsilon_first_greedy.plot_average_heuristic_gamble("Epsilon-First", eps=0, m=m)
     plt.title("Average regret over 100 gambles")
     plt.tight_layout()
     plt.legend()
@@ -243,8 +243,8 @@ def run_all_simulations(a,b):
 
     # Compare UCB to epsilon first
     print("Now comparing epsilon-first to UCB")
-    ucb.plot_average_gamble("UCB1", eps=0, m=1, ucb=True)
-    epsilon_first_greedy.plot_average_gamble("Epsilon-First", eps=0, m=m)
+    ucb.plot_average_heuristic_gamble("UCB1", eps=0, m=1, ucb=True)
+    epsilon_first_greedy.plot_average_heuristic_gamble("Epsilon-First", eps=0, m=m)
     plt.title("Regret of an individual gamble")
     plt.title("Average regret over 100 gambles")
     plt.tight_layout()
