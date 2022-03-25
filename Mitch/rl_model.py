@@ -10,7 +10,7 @@ from stable_baselines3.common.env_checker import check_env
 from stable_baselines3 import PPO, A2C
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
-from loss_functions import loss_func
+from loss_functions import loss_func, loss_func1
 from heuristic_mab import Heuristic_MAB
 # from callbacks import SaveOnBestTrainingRewardCallback
 
@@ -51,6 +51,8 @@ class MAB(gym.Env):
         self.beta_dist()
         self.arm2reward = {arm:[] for arm in self.arm2pull}
         self.arm2r_hat = {arm:[] for arm in self.arm2pull}
+        self.arm2sum = {arm:0 for arm in self.arm2pull}
+        self.arm2num = {arm:0 for arm in self.arm2pull}
 
     def reset(self):
         """Reset the experiment and return a random value."""
@@ -73,7 +75,8 @@ class MAB(gym.Env):
         self.arm2reward[action].append(payout)
         
         # Calculate reward based off of custom loss function
-        reward = loss_func(payout, action, self.arm2reward, self.arm2r_hat)
+        # reward = loss_func(payout, action, self.arm2reward, self.arm2r_hat)
+        reward = loss_func1(payout, action, self.arm2reward, self.arm2sum, self.arm2num)
         self.rewards.append(payout)
 
         # Keep track of time for analysis
@@ -86,7 +89,7 @@ class MAB(gym.Env):
         done = False
 
         return obs, reward, done, info
-
+        
     def render(self, mode='console'):
         """
         Generate visualization of 
@@ -95,8 +98,16 @@ class MAB(gym.Env):
         
         (bottom) The regret as a function of time.
         """
-        x = np.linspace(0,1,100)
+        x = np.linspace(0,1,self.T)
+        self.plot_rl_reward_regret(x)
+        self.plot_single_regret_comparison()
+        return self.list_actions
 
+    def plot_rl_reward_regret(self, x):
+        """
+        Plot the distribution of rewards compared to the best distribution 
+        and the plot of regret as a function of time.
+        """
         # Plot distribution of rewards received compared to best distribution
         plt.subplot(2,1,1)
         plt.hist(np.concatenate(self.rewards), bins='auto', density=True)
@@ -111,26 +122,28 @@ class MAB(gym.Env):
         plt.ylabel("Regret $R$")
         plt.legend()
         plt.tight_layout()
-        plt.show();
-
+        plt.savefig("plot_rl_reward_regret.png")
+        plt.close()
+    
+    def plot_single_regret_comparison(self):
+        """
+        Compare the regret from a single RL algorithm to common heuristics
+        """
         # Plot Heuristics
-        self.run_heuristics()
-        self.random_gamble.plot_individual_gamble("Random Gamble")
-        self.greedy_gamble.plot_individual_gamble("Greedy Gamble")
-        self.epsilon_greedy.plot_individual_gamble("Epsilon-Greedy")
-        self.epsilon_first_greedy.plot_individual_gamble("Epsilon-First")
-        self.ucb.plot_individual_gamble("UCB")
+        self.init_heuristics()
+        self.random_gamble.plot_individual_heuristic_gamble("Random Gamble")
+        self.greedy_gamble.plot_individual_heuristic_gamble("Greedy Gamble")
+        self.epsilon_greedy.plot_individual_heuristic_gamble("Epsilon-Greedy")
+        self.epsilon_first_greedy.plot_individual_heuristic_gamble("Epsilon-First")
+        self.ucb.plot_individual_heuristic_gamble("UCB")
 
         # Overlay RL algorithm
-        cum_rewards = np.array(self.rewards).cumsum()
-        self.regrets = [t*self.r_star - cum_rewards[t] for t in range(self.T)]
-        plt.plot(range(self.T), self.regrets, label="RL")
+        plt.plot(np.arange(self.T), self.list_regrets, label="RL algorithm") 
         plt.legend()
         plt.title("Regret of an individual gamble")
         plt.tight_layout()
-        plt.show();
-
-        return self.list_actions
+        plt.savefig("plot_regret_comparisons.png")
+        plt.close()
 
     def beta_dist(self):
         """
@@ -151,7 +164,10 @@ class MAB(gym.Env):
         """Return random samples from playing an arm."""
         return self.arm2pull[arm].rvs(n_pulls)
     
-    def run_heuristics(self):
+    def init_heuristics(self):
+        """
+        Initialize the heuristic algorithms
+        """
         # Set parameter for epsilon_first_greedy
         m = 5
 
