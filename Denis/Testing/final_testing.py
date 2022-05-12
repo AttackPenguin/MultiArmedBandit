@@ -9,7 +9,7 @@ import numpy as np
 import seaborn as sns
 import torch
 
-from Denis.Testing.testing_generators import get_baseline_generators
+from Denis.Testing.testing_generators import get_squished_test_gens
 from Denis.nn_models import MABInceptionModel2
 from Denis.reward_generators import RewardGeneratorChallenging
 
@@ -19,7 +19,8 @@ sns.set()
 
 
 def main():
-    pass
+    model = torch.load('model_weights_training_window_1285_loss_0.25232.pth')
+    get_model_rewards(model, get_squished_test_gens())
 
 
 def get_model_rewards(
