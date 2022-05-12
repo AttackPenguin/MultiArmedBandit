@@ -18,14 +18,17 @@ sns.set()
 
 
 def main():
-    pass
+    g_training_loss(
+        "/home/denis/PycharmProjects/MultiArmedBandit/Denis/Experiment 03/2022-03-26 10:09:18",
+        True, 14900
+    )
 
 
 def g_training_mean_tot_performance(
         dir_path: str,
+        use_pickled: bool = True,
         start: int = None,
-        end: int = None,
-        use_pickled: bool = True
+        end: int = None
 ):
     """
     Takes directory of experiment as argument, and generates figure showing

@@ -2,15 +2,18 @@ from __future__ import annotations
 
 import os
 import pickle
+import sys
 from typing import Type
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 import torch
 
 from Denis.nn_models import MABInceptionModel2
 from Denis.reward_generators import RewardGenerator
+from Denis.Testing.testing_generators import get_squished_test_gens
 
 PICKLED_DIR = "pickled_data"
 
@@ -18,12 +21,24 @@ sns.set()
 
 
 def main():
-    pass
+    dttm_started = pd.Timestamp.now()
+    print(f"Started at {dttm_started}...")
+
+    performance_data = get_training_performance(
+        "/home/denis/PycharmProjects/MultiArmedBandit/Denis/Experiment 02/2022-03-04 15:27:08",
+        MABInceptionModel2,
+        get_squished_test_gens()
+    )
+
+    dttm_finished = pd.Timestamp.now()
+    print(f"Finished at {dttm_finished}...")
+    print(f"Elapsed time: {dttm_finished-dttm_started}")
+    sys.exit(0)
 
 
 def get_performance_on_generator(
         generator: RewardGenerator,
-        nn: MABInceptionModel2,
+        nn: torch.nn.Module,
         n: int = 10,
         pulls: int = 100
 ):
@@ -74,20 +89,21 @@ def get_training_performance(
         with open(locs_file_path, 'rb') as file:
             locations = pickle.load(file)
 
-        weights_file = list()
+        weights_files = list()
         for file_name in os.listdir(dir_path):
             if file_name.endswith('pth'):
-                weights_file.append(file_name)
+                weights_files.append(file_name)
 
         performance_data = dict()
-        for location, file_name in zip(locations, weights_file):
+        for location, file_name in zip(locations, weights_files):
             list_levers = list()
             list_rewards = list()
             list_opt_single_reward = list()
             list_overall_performance = list()
             list_pull_performance = list()
 
-            model = nn.load_state_dict(
+            model = nn()
+            model.load_state_dict(
                 torch.load(os.path.join(dir_path, file_name))
             )
             model.eval()

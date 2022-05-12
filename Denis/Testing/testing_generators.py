@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import os
 import pickle
+import sys
 from typing import Type, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 import torch
 
@@ -16,7 +18,15 @@ PICKLED_DIR = "pickled_data"
 
 
 def main():
+    dttm_started = pd.Timestamp.now()
+    print(f"Started at {dttm_started}...")
+
     get_squished_test_gens()
+
+    dttm_finished = pd.Timestamp.now()
+    print(f"Finished at {dttm_finished}...")
+    print(f"Elapsed time: {dttm_finished-dttm_started}")
+    sys.exit(0)
 
 
 def get_baseline_generators(
